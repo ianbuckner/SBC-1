@@ -1,0 +1,12 @@
+@charset "utf-8";
+body {
+ 	background-image:none;
+	background-color:#c8c6b7;
+	margin:20px;
+	overflow:auto;
+	font-family: Tahoma, Geneva, sans-serif;
+	font-size: 18px;
+ }
+.bodycopy {font-family:Arial, Helvetica, sans-serif;font-size:10pt;color:#630}
+.bodycopy8 {font-family:Arial, Helvetica, sans-serif;font-size:14pt;color:#92117e}
+p{margin-bottom:0px;padding-bottom:0px}
