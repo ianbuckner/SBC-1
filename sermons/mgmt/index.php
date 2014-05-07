@@ -84,6 +84,134 @@ else {
                 voltrack: "c8c6b7"
             });  
         </script>
+        
+        <!-- ------------------------------------------------------------------------- -->
+        <!-- Javascript file uploader implementation --> 
+        <script type="text/javascript">
+   			var chunksize = 51200;
+			var retries = 10;
+			var retrySleep = 10;
+			var attempts = 0;
+			var pBar;
+
+			function setStatus(msg) {
+				document.getElementById('uploadStatus').innerHTML = msg;
+			}
+			
+			function uploadDone() {
+				var req = new XMLHttpRequest();
+				
+				req.open('GET', 'upload/upload.php?op=done&id=<?php echo $id; ?>');
+				req.onerror = uploadError;
+				req.onload = uploadComplete;
+			    req.send();
+			}
+			
+			function uploadComplete() {
+				setStatus("Upload complete");
+            	alert("Sermon uploaded!");
+				document.getElementById('uploadFile').disabled = true;
+				document.getElementById('selectedFile').disabled = false;  
+				pBar.value = 0;
+				setStatus("");
+			}
+			
+			function uploadError() {
+            	alert("Unable to upload at this time!");
+				document.getElementById('uploadFile').disabled = true;
+				document.getElementById('selectedFile').disabled = false;
+				pBar.value = 0;          
+				setStatus("");
+            }
+	
+        	function uploadFileSection(file, start) {
+				var reader = new FileReader();
+				var endPos = start+chunksize;
+				var blob = file.slice(start, endPos);
+
+				reader.onloadend = function(evt) {
+					if (evt.target.readyState == FileReader.DONE) {
+						var req = new XMLHttpRequest();
+				
+						req.open('POST', 'upload/upload.php?op=upload&id=<?php echo $id; ?>');
+						
+						req.onload = function() {
+							attempts = 0;
+							pBar.value = endPos;
+							if (endPos < file.size) {
+								uploadFileSection(file, endPos);
+							}
+							else {
+								uploadDone();
+							}
+						}
+						
+						req.onerror = function() {
+							attempts++;
+							if (attempts < retries) {
+								setTimeout(function() { 
+									setStatus("Retry " + attempts + " of " + retries);
+									uploadFileSection(file, start);
+								}, retrySleep*1000);
+							}
+							else {
+								attempts = 0;
+								uploadError();
+							}
+						}
+						
+						req.send(blob);
+					}
+				};
+							
+				reader.readAsArrayBuffer(blob);
+        	}
+        	
+        	
+        	function selectFile() {
+            	document.getElementById('selectedFile').click();
+            }
+            
+            function fileSelected() {
+				document.getElementById('uploadFile').disabled = false;
+            }
+            
+            function uploadFile() {
+				var req = new XMLHttpRequest();
+
+				document.getElementById('uploadFile').disabled = true;	
+				
+				req.open('GET', 'upload/upload.php?op=size&id=<?php echo $id; ?>');
+				
+				req.onload = function() {
+					var sizeOnServer = parseInt(req.responseText);
+					
+					if ((req.status == 200) && (sizeOnServer > -1)) {
+						var file = document.getElementById('selectedFile').files[0];
+            			var fileSize = file.size;
+						
+						if (sizeOnServer < fileSize) {
+							pBar = document.getElementById('pBar');
+							pBar.max = fileSize;
+							pBar.value = sizeOnServer;
+							attempts = 0;
+							setStatus("Uploading...");
+							uploadFileSection(file, sizeOnServer);
+						}
+						if (sizeOnServer == fileSize) {
+							uploadDone();
+						}
+      				}
+      				else {
+				        uploadError();
+      				}
+      				
+    			};
+    			req.onerror = uploadError;
+			    req.send();
+            }
+        </script>
+        <!-- ------------------------------------------------------------------------- -->
 	</head>
 <body>
   <div style="width:960px; height:auto; margin-left:auto; margin-right:auto; font-family: Arial, Helvetica, sans-serif;padding-top:2px; padding-bottom:20px;position:relative;">
@@ -103,20 +231,22 @@ else {
 	</div>
 	
 	<?php if ($sm != null) { ?>
-	<div style="padding-top:10px;padding-left:10px;position:absolute;left:15px;top:440px;width:150px;height:110px;background-color:#c8c6b7;border-radius:10px;-moz-border-radius:10px;-webkit-border-radius:10px;">
-	<applet archive="FileUploader.jar" code="com.sbc.sermons.FileUploader.class" width=140 height=100>
-		<param  name="id" value="<?php echo $id; ?>"/>
-		<param  name="chunksize" value="51200"/>
-		<param  name="retries" value="10"/>
-		<param  name="retrySleep" value="10"/>
-	</applet>
-    </div>  
+       <div style="padding-top:10px;padding-left:10px;position:absolute;left:15px;top:440px;width:150px;height:110px;background-color:#c8c6b7;border-radius:10px;-moz-border-radius:10px;-webkit-border-radius:10px;">
+		<input type="file" id="selectedFile" style="display: none;" onchange="fileSelected();" accept="audio/*"/>
+		<button type="button" onclick="selectFile();">Select File</button>
+		<br/>
+		<button type="button" id="uploadFile" onclick="uploadFile();" disabled>Upload</button>
+		<br/>
+		<progress id='pBar' value="0" style="width:140px;height:20px;"></progress>
+		<br/>
+		<div id="uploadStatus" class="bodycopy"></div>
+    </div>    
     <?php } ?>
 
 <!--380x300PX BOX -->
 <div style="position:absolute;top:110px;left:179px;width:380px; float: left; overflow: hidden;">
 <div><img src="http://www.skiptonbaptistchurch.com/images/356px_box_top.png" width="380" height="12" alt="Box Top" /></div>
-<div style="height:450px;background-image:url(http://www.skiptonbaptistchurch.com/images/356px_centre_strip.png); background-repeat:repeat-y; padding-left:10px;padding-right:10px;">
+<div style="height:480px;background-image:url(http://www.skiptonbaptistchurch.com/images/356px_centre_strip.png); background-repeat:repeat-y; padding-left:10px;padding-right:10px;">
 	<span class="bodycopy8"><?php echo $pageTitle;?></span><br />
 	<!--Information starts here.-->
 
@@ -217,17 +347,17 @@ else {
 <!--380x300PX BOX -->
 <div style="position:absolute;top:110px;left:564px;width:380px; padding-left: 4px;overflow: hidden;">
 <div><img src="http://www.skiptonbaptistchurch.com/images/356px_box_top.png" width="380" height="12" alt="Box Top" /></div>
-<div style="height:450px;background-image:url(http://www.skiptonbaptistchurch.com/images/356px_centre_strip.png); background-repeat:repeat-y; padding-left:7px;padding-right:5px;">
+<div style="height:480px;background-image:url(http://www.skiptonbaptistchurch.com/images/356px_centre_strip.png); background-repeat:repeat-y; padding-left:7px;padding-right:5px;">
 
 <span class="bodycopy8">Current Sermons</span>
 
 <!--Scroll Bar-->
 
-<div style="width:367px; height:425px; overflow-y:scroll;overflow-x:hidden">
+<div style="width:367px; height:455px; overflow-y:scroll;overflow-x:hidden">
 
 <span class="bodycopy">
 <p>
-<table border="0" width="100%">
+<table border="0" width="95%">
 <?php  
 	$sermons = $sMgr->doc->getElementsByTagName("sermon");	
 	$sidx = 1;
