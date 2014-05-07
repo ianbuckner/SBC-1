@@ -6,7 +6,7 @@ This source tree is for the part of the SBC web site that supports the uploading
 mgmt/
 - this is the subtree for the uploading service. Access is controlled using Apache .htaccess
 
-The uploading is now performed by HTML5 Javascript code using teh XHTMLRequest object. This replaces a Java Applet implementation.
+The uploading is now performed by HTML5 Javascript code using the XHTMLRequest object. This replaces a Java Applet implementation.
 
 Tested Browsers
 ---------------
