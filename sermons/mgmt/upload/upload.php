@@ -5,20 +5,16 @@ include("../../inc/mp3tag.inc");
 require_once('../../lib/getid3/getid3.php');
 
 $id = NULL;
-$name = NULL;
 $op = NULL;
 	
 if (isset($_GET["id"])) {
 	$id = $_GET["id"];
 }
-if (isset($_GET["name"])) {
-	$name = $_GET["name"];
-}
 if (isset($_GET["op"])) {
 	$op = $_GET["op"];
 }
 
-if (($id == NULL) || ($name == NULL) || ($op == NULL)) {
+if (($id == NULL) || ($op == NULL)) {
 	echo "-1";
 }
 else {
