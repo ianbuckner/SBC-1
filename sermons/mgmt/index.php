@@ -110,18 +110,12 @@ else {
 			function uploadComplete() {
 				setStatus("Upload complete");
             	alert("Sermon uploaded!");
-				document.getElementById('uploadFile').disabled = true;
-				document.getElementById('selectedFile').disabled = false;  
-				pBar.value = 0;
-				setStatus("");
+				window.location.href = "index.php";
 			}
 			
 			function uploadError() {
             	alert("Unable to upload at this time!");
-				document.getElementById('uploadFile').disabled = true;
-				document.getElementById('selectedFile').disabled = false;
-				pBar.value = 0;          
-				setStatus("");
+				window.location.href = "index.php?id=<?php echo $id; ?>";
             }
 	
         	function uploadFileSection(file, start) {
@@ -136,6 +130,7 @@ else {
 						req.open('POST', 'upload/upload.php?op=upload&id=<?php echo $id; ?>');
 						
 						req.onload = function() {
+							setStatus("Uploading...");
 							attempts = 0;
 							pBar.value = endPos;
 							if (endPos < file.size) {
@@ -147,8 +142,8 @@ else {
 						}
 						
 						req.onerror = function() {
-							attempts++;
 							if (attempts < retries) {
+								attempts++;
 								setTimeout(function() { 
 									setStatus("Retry " + attempts + " of " + retries);
 									uploadFileSection(file, start);
